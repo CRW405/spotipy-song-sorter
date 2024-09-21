@@ -1,0 +1,8 @@
+# Ignore the config file
+config.json
+
+# Ignore the output folder
+output/
+
+# Ignore the .cache file
+.cache
