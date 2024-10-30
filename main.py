@@ -16,7 +16,7 @@ import string
 #   - add option to loop through all playlists in folder
 
 # 4. Analyze playlist
-#   - would require stroring of genres and music data
+#   - would require storing of genres and music data
 #   - use pandas
 
 ###########################################################
@@ -171,32 +171,36 @@ def csvToPlaylist(csv):
 # main functions ^ #########################################################################################
 
 
-on = True
-while on:
-    menu = input("""
-                Spotipy PLaylist Sorter and Analyzer
-                ------------------------------------
-                1 - Convert playlist to CSV
-                2 - Sort CSV
-                3 - Convert CSV to playlist
-                4 - Sign in
-                ------------------------------------
-                """)
-
-    if menu == "1":
-        playlist = input("Enter playlist link: ")
-        playlistToCSV(playlist)
-    elif menu == "2":
-        csv = input("Enter CSV file: ")
-        # sortCSV(csv)
-    elif menu == "3":
-        csv = input("Enter CSV file: ")
-        csvToPlaylist(csv)
-    elif menu == "4":
-        id = input("Enter client id: ")
-        secret = input("Enter client secret: ")
-        writeConfig(id, secret)
-    else:
-        on = False
-        print("Goodbye!")
+def main():
+    on = True
+    while on:
+        menu = input("""
+                    Spotipy PLaylist Sorter and Analyzer
+                    ------------------------------------
+                    1 - Convert playlist to CSV
+                    2 - Sort CSV
+                    3 - Convert CSV to playlist
+                    4 - Sign in
+                    ------------------------------------
+                    """)
+        if menu == "1":
+            playlist = input("Enter playlist link: ")
+            playlistToCSV(playlist)
+        elif menu == "2":
+            csv = input("Enter CSV file: ")
+            # sortCSV(csv)
+        elif menu == "3":
+            csv = input("Enter CSV file: ")
+            csvToPlaylist(csv)
+        elif menu == "4":
+            id = input("Enter client id: ")
+            secret = input("Enter client secret: ")
+            writeConfig(id, secret)
+        else:
+            on = False
+            print("Goodbye!")
 # menu^ ###########################################################################################
+
+
+if __name__ == "__main__":
+    main()
