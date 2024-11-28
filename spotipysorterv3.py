@@ -92,12 +92,18 @@ class Playlist:  # class to store playlist data
         tracks = []
         results = spotify.playlist_tracks(id, limit=20)
 
-        tracks.extend([Track(item["track"]["id"], spotify)
-                      for item in results["items"]])
+        tracks.extend([Track(item["track"]["id"], spotify) for item in results["items"]])
+
         while results["next"]:
-            results = spotify.next(results)
-            tracks.extend([Track(item["track"]["id"], spotify)
-                          for item in results["items"]])
+            try:
+                results = spotify.next(results)
+                tracks.extend([Track(item["track"]["id"], spotify) for item in results["items"]])
+            except spotipy.exceptions.SpotifyException as e:
+                if e.http_status == 429:
+                    time.sleep(5) # wait 5 seconds if rate limited
+                    results = spotify.next(results)
+                else:
+                    raise e
         return tracks
 
 
@@ -148,6 +154,8 @@ def main():
     # log
     # 134.91
     # 134.91
+    # 103.48 rate limiting handling implemented
+    # 117.57 1 second sleep added
     
     # expected
     # 56.61.
