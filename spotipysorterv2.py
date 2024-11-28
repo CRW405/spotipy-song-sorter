@@ -9,15 +9,22 @@ import string
 
 ########################## TO DO ##########################
 # 2. Sort CSV
-#   - Sort by artist
+#   - Sort by artist - done
+#       - minimum number of entries before file is created, eg if artist has 1 song, don't create file, if artist has n songs, create file
 #   - add option to sort by genre, maybe only include genres with specific amount of files
-# 3. Convert CSV to playlist
+# 3. Convert CSV to playlist - done
 #   - add artist genres to description
 #   - add option to loop through all playlists in folder
+#   -
 
 # 4. Analyze playlist
 #   - would require storing of genres and music data
 #   - use pandas
+
+# 5. Refactor code !!!!!!!!!!
+
+# 6. add clear output folder option - done
+#    - ask if to delete parent files
 
 ###########################################################
 # gets current path and creates needed filepaths
@@ -30,6 +37,7 @@ id = ""
 secret = ""
 redirect = "http://localhost:3000"
 scope = "playlist-read-private playlist-read-collaborative user-library-read playlist-modify-public"
+
 # setup^ ###########################################################################################
 
 
@@ -122,7 +130,7 @@ def playlistToCSV(playlist):  # converts spotify playlist to csv of id, song nam
                     writer.writerow([track['id'], track['name'], trackArtists])
 
                 if results['next']:  # if there are more results
-                    time.sleep(5)  # sleep to avoid rate limiting
+                    time.sleep(2)  # sleep to avoid rate limiting
 
                     try:
                         results = sp.next(results)
@@ -142,31 +150,63 @@ def playlistToCSV(playlist):  # converts spotify playlist to csv of id, song nam
         print(f"Error: {e}")
 
 
-# def sortCSV(csv):
-#     basepath = os.path.dirname(csv)  # gets directory of parent csv
+def sortCSV(parentCsv):
+    basepath = os.path.dirname(parentCsv)  # gets directory of parent csv
 
-#     with open(csv, 'r', newline='', encoding='utf-8') as file:  # open csv
-#         reader = csv.reader(file)
+    with open(parentCsv, 'r', newline='', encoding='utf-8') as file:  # open csv
+        reader = csv.reader(file)
 
-#         header = next(reader)  # skips header
+        header = next(reader)  # skips header
 
-#         data = [row for row in reader]  # reads data from csv
+        data = [row for row in reader]  # reads data from csv
 
-#         for row in data:
-#             artists = row[2].split(",")  # splits artists into list
+        for row in data:  # iterates through rows in parent csv
+            artists = row[2].split(",")  # splits artists into list
 
-#             for artist in artists:
-#                 artist = sanatize(artist)  # sanitizes artist name
+            for artist in artists:  # iterates through each artist for a song
+                artist = sanitize(artist)  # sanitizes artist name
 
-#                 # creates path for artist folder
-#                 path = os.path.join(basepath, artist)
+                # creates path for artist folder
+                path = os.path.join(basepath, f"{artist}.csv")
 
-#                 if not os.path.exists(path):
-#                     with open(path, 'a')
+                if not os.path.exists(path):  # checks if artist folder exists
+                    # creates file if it doesn't exist
+                    with open(path, 'a', newline='', encoding='utf-8') as file:
+                        writer = csv.writer(file)  # creates csv writer object
+                        writer.writerow(header)  # writes header
+                        writer.writerow(row)  # writes row
+                        file.close()  # closes file
+                else:  # if artist folder exists
+                    with open(path, 'a', newline='', encoding='utf-8') as file:  # append
+                        writer = csv.writer(file)
+                        writer.writerow(row)
+                        file.close()
 
 
-def csvToPlaylist(csv):
-    pass
+def csvToPlaylist(sourceCsv):
+    artist = os.path.basename(sourceCsv).split(
+        ".")[0]  # gets artist name from csv
+    sp.user_playlist_create(
+        sp.me()["id"], artist, public=True)  # creates playlist
+    playlist_id = sp.current_user_playlists(
+    )["items"][0]["id"]  # gets playlist id
+    with open(sourceCsv, 'r', newline='', encoding='utf-8') as file:
+        reader = csv.reader(file)
+
+        header = next(reader)
+
+        data = [row for row in reader]
+
+        for row in data:
+            sp.playlist_add_items(playlist_id, [row[0]])
+
+
+def clearOutput():
+    for root, dirs, files in os.walk(output):
+        for file in files:
+            os.remove(os.path.join(root, file))
+        for dir in dirs:
+            os.rmdir(os.path.join(root, dir))
 
 # main functions ^ #########################################################################################
 
@@ -181,6 +221,7 @@ def main():
                     2 - Sort CSV
                     3 - Convert CSV to playlist
                     4 - Sign in
+                    5 - Clear output folder
                     ------------------------------------
                     """)
         if menu == "1":
@@ -188,7 +229,7 @@ def main():
             playlistToCSV(playlist)
         elif menu == "2":
             csv = input("Enter CSV file: ")
-            # sortCSV(csv)
+            sortCSV(csv)
         elif menu == "3":
             csv = input("Enter CSV file: ")
             csvToPlaylist(csv)
@@ -196,6 +237,8 @@ def main():
             id = input("Enter client id: ")
             secret = input("Enter client secret: ")
             writeConfig(id, secret)
+        elif menu == "5":
+            clearOutput()
         else:
             on = False
             print("Goodbye!")
