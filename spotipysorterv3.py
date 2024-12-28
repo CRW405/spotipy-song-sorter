@@ -6,6 +6,8 @@ import json
 from spotipy.oauth2 import SpotifyOAuth
 import string
 import time
+import aiohttp
+import asyncio
 
 
 class Filepath:  # class to store filepaths
@@ -85,22 +87,23 @@ class Playlist:  # class to store playlist data
         self.id = id
         self.spotify = spotify
         self.name = spotify.playlist(self.id)["name"]
-
         self.tracks = self.get_tracks(spotify, id)
 
     def get_tracks(self, spotify, id):
         tracks = []
         results = spotify.playlist_tracks(id, limit=20)
 
-        tracks.extend([Track(item["track"]["id"], spotify) for item in results["items"]])
+        tracks.extend([Track(item["track"]["id"], spotify)
+                      for item in results["items"]])
 
         while results["next"]:
             try:
                 results = spotify.next(results)
-                tracks.extend([Track(item["track"]["id"], spotify) for item in results["items"]])
+                tracks.extend([Track(item["track"]["id"], spotify)
+                              for item in results["items"]])
             except spotipy.exceptions.SpotifyException as e:
                 if e.http_status == 429:
-                    time.sleep(5) # wait 5 seconds if rate limited
+                    time.sleep(5)  # wait 5 seconds if rate limited
                     results = spotify.next(results)
                 else:
                     raise e
@@ -156,7 +159,7 @@ def main():
     # 134.91
     # 103.48 rate limiting handling implemented
     # 117.57 1 second sleep added
-    
+
     # expected
     # 56.61.
 
